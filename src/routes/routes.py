@@ -6,9 +6,11 @@ def create_user():
     try:
         datos = request.json
         new_user = User(
+            identification=datos['identification'],
             name=datos['name'],
             email=datos['email'],
-            password=datos['password']
+            password=datos['password'],
+            type=datos['type']
         )
         db.session.add(new_user)
         db.session.commit()
