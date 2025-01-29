@@ -12,6 +12,7 @@ def create_user():
             password=datos['password'],
             type=datos['type']
         )
+        new_user.set_password(datos['password'])
         db.session.add(new_user)
         db.session.commit()
         return jsonify({'message': 'User created successfully'}), 201
