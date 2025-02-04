@@ -22,27 +22,37 @@ jobs:
           docker push ${{ secrets.DOCKER_USERNAME }}/create_user_microservice_image:latest
 
       - name: Conectar a AWS EC2 y desplegar
-  uses: appleboy/ssh-action@master
-  with:
-    host: ${{ secrets.EC2_HOST_M }}
-    username: ${{ secrets.EC2_USER_M }}
-    key: ${{ secrets.EC2_SSH_KEY_M }}
-    script: |
-      # Detener y eliminar el contenedor si ya existe
-      sudo docker stop create_user_microservice_container || true
-      sudo docker rm create_user_microservice_container || true
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST_M }}
+          username: ${{ secrets.EC2_USER_M }}
+          key: ${{ secrets.EC2_SSH_KEY_M }}
+          script: |
+            echo "🚀 Iniciando despliegue en AWS EC2..."
 
-      # Remover imágenes antiguas (opcional, para evitar acumulación)
-      sudo docker image prune -af || true
+            # Detener y eliminar el contenedor si ya existe
+            if sudo docker ps -a --format '{{.Names}}' | grep -q create_user_microservice_container; then
+              echo "🛑 Deteniendo y eliminando contenedor existente..."
+              sudo docker stop create_user_microservice_container
+              sudo docker rm create_user_microservice_container
+            fi
 
-      # Descargar la última versión de la imagen desde Docker Hub
-      sudo docker pull ${{ secrets.DOCKER_USERNAME }}/create_user_microservice_image:latest
+            # Remover imágenes antiguas para evitar acumulación
+            echo "🧹 Limpiando imágenes antiguas..."
+            sudo docker image prune -af || true
 
-      # Ejecutar el nuevo contenedor con las variables de entorno
-      sudo docker run -d --name create_user_microservice_container \
-        --env DB_USER=${{ secrets.DB_USER_M }} \
-        --env DB_PASSWORD=${{ secrets.DB_PASSWORD_M }} \
-        --env DB_SERVER=${{ secrets.DB_SERVER_M }} \
-        --env DB_NAME=${{ secrets.DB_NAME_M }} \
-        -p 5000:5000 \
-        ${{ secrets.DOCKER_USERNAME }}/create_user_microservice_image:latest
+            # Descargar la última versión de la imagen desde Docker Hub
+            echo "📥 Descargando nueva imagen..."
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/create_user_microservice_image:latest
+
+            # Ejecutar el nuevo contenedor con las variables de entorno
+            echo "🚀 Ejecutando nuevo contenedor..."
+            sudo docker run -d --name create_user_microservice_container \
+              --env DB_USER=${{ secrets.DB_USER_M }} \
+              --env DB_PASSWORD=${{ secrets.DB_PASSWORD_M }} \
+              --env DB_SERVER=${{ secrets.DB_SERVER_M }} \
+              --env DB_NAME=${{ secrets.DB_NAME_M }} \
+              -p 5000:5000 \
+              ${{ secrets.DOCKER_USERNAME }}/create_user_microservice_image:latest
+
+            echo "✅ Despliegue completado con éxito."
