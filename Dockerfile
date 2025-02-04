@@ -1,17 +1,17 @@
-# Use a Python base image
-FROM python:3.10
+# Use a base image with Python
+FROM python:3.9
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy the project files to the container
+# Copy all the project files to the container
 COPY . .
 
-# Install dependencies
+# Install the dependencies from requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose the port on which Flask will run
+# Expose the port where Flask will run
 EXPOSE 5000
 
-# Command to start the application
-CMD ["python", "app.py"]
+# Command to run the application correctly
+CMD ["python", "-m", "src.app"]
